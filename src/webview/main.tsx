@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SchemaFileSelector } from './components/SchemaFileSelector';
+import { ModelFlow } from './components/ModelFlow';
 import { ModelGrid } from './components/ModelGrid';
 import { parseSchema } from './utils/schemaParser';
 import { PrismaSchema } from './types/schema';
@@ -25,6 +26,7 @@ function App() {
   const [schemaFile, setSchemaFile] = useState<SchemaFile | null>(null);
   const [parsedSchema, setParsedSchema] = useState<PrismaSchema | null>(null);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'grid' | 'flow'>('flow');
 
   const handleFileSelect = () => {
     console.log('Sending selectSchemaFile message to VSCode');
@@ -89,7 +91,23 @@ function App() {
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">スキーマファイル: {schemaFile.path}</h2>
+            <div>
+              <h2 className="text-xl font-semibold">スキーマファイル: {schemaFile.path}</h2>
+              <div className="flex items-center gap-4 mt-2">
+                <button
+                  className={`text-sm ${viewMode === 'grid' ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+                  onClick={() => setViewMode('grid')}
+                >
+                  グリッド表示
+                </button>
+                <button
+                  className={`text-sm ${viewMode === 'flow' ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+                  onClick={() => setViewMode('flow')}
+                >
+                  フロー表示
+                </button>
+              </div>
+            </div>
             <button
               className="text-sm text-primary hover:underline"
               onClick={() => {
@@ -102,11 +120,19 @@ function App() {
             </button>
           </div>
           {parsedSchema && (
-            <ModelGrid
-              schema={parsedSchema}
-              selectedModels={selectedModels}
-              onModelSelect={handleModelSelect}
-            />
+            viewMode === 'flow' ? (
+              <ModelFlow
+                schema={parsedSchema}
+                selectedModels={selectedModels}
+                onModelSelect={handleModelSelect}
+              />
+            ) : (
+              <ModelGrid
+                schema={parsedSchema}
+                selectedModels={selectedModels}
+                onModelSelect={handleModelSelect}
+              />
+            )
           )}
         </div>
       )}

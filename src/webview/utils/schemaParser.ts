@@ -5,10 +5,19 @@ function parseField(fieldLine: string): PrismaField | null {
   const fieldPattern = /^\s*(\w+)\s+(\w+)(\[\])?\s*(\?)?\s*(.*)$/;
   const match = fieldLine.match(fieldPattern);
   
-  if (!match) return null;
+  if (!match) {
+    console.log('Failed to match field pattern:', fieldLine);
+    return null;
+  }
   
   const [, name, type, isList, isOptional, attributes] = match;
+  console.log('Parsing field:', { name, type, isList, isOptional, attributes });
   
+  // プリミティブ型をチェック
+  const primitiveTypes = ['String', 'Int', 'Float', 'Boolean', 'DateTime', 'BigInt', 'Decimal', 'Json'];
+  const isModelType = !primitiveTypes.includes(type);
+  console.log('Field type info:', { type, isModelType });
+
   const field: PrismaField = {
     name,
     type,
@@ -27,31 +36,52 @@ function parseField(fieldLine: string): PrismaField | null {
   // リレーションの解析
   const relationMatch = attributes.match(/@relation\((.*?)\)/);
   if (relationMatch) {
+    console.log('Found @relation:', relationMatch[1]);
     const relationStr = relationMatch[1];
     field.relation = {
       fields: [],
       references: []
     };
 
-    // fields と references の解析
+    // リレーション名の解析（"name: xxx"の形式）
+    const nameMatch = relationStr.match(/name:\s*["']([^"']+)["']/);
+    if (nameMatch) {
+      field.relation.name = nameMatch[1];
+    }
+
+    // fields の解析
     const fieldsMatch = relationStr.match(/fields:\s*\[(.*?)\]/);
-    const referencesMatch = relationStr.match(/references:\s*\[(.*?)\]/);
-    
     if (fieldsMatch) {
       field.relation.fields = fieldsMatch[1].split(',').map(f => f.trim());
     }
+
+    // references の解析
+    const referencesMatch = relationStr.match(/references:\s*\[(.*?)\]/);
     if (referencesMatch) {
       field.relation.references = referencesMatch[1].split(',').map(f => f.trim());
     }
 
-    // onDelete と onUpdate の解析
+    // onDelete の解析
     const onDeleteMatch = relationStr.match(/onDelete:\s*(\w+)/);
+    if (onDeleteMatch) {
+      field.relation.onDelete = onDeleteMatch[1];
+    }
+
+    // onUpdate の解析
     const onUpdateMatch = relationStr.match(/onUpdate:\s*(\w+)/);
-    
-    if (onDeleteMatch) field.relation.onDelete = onDeleteMatch[1];
-    if (onUpdateMatch) field.relation.onUpdate = onUpdateMatch[1];
+    if (onUpdateMatch) {
+      field.relation.onUpdate = onUpdateMatch[1];
+    }
+  } else if (isModelType && !field.isId) {
+    // 暗黙的なリレーションとして扱う（ただし、IDフィールドは除外）
+    console.log('Implicit relation for model type:', type);
+    field.relation = {
+      fields: [],
+      references: []
+    };
   }
 
+  console.log('Parsed field result:', field);
   return field;
 }
 

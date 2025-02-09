@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+.react-flow__edge {
+  z-index: 1000;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+}
+
+.react-flow__node {
+  z-index: 1;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
