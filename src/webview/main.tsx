@@ -107,6 +107,25 @@ function App() {
                   フロー表示
                 </button>
               </div>
+              {viewMode === 'flow' && (
+                <div className="mt-4 bg-white/95 p-4 rounded-lg shadow-md border inline-block">
+                  <div className="text-sm font-medium mb-2">リレーションの種類</div>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-0.5" style={{ backgroundColor: '#ff0072' }} />
+                      <span className="text-sm">1:N</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-0.5" style={{ backgroundColor: '#00ff72' }} />
+                      <span className="text-sm">1:1</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-0.5" style={{ backgroundColor: '#0072ff' }} />
+                      <span className="text-sm">N:1</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <button
               className="text-sm text-primary hover:underline"
