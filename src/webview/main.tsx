@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SchemaFileSelector } from './components/SchemaFileSelector';
+import { ModelGrid } from './components/ModelGrid';
+import { parseSchema } from './utils/schemaParser';
+import { PrismaSchema } from './types/schema';
 
 declare global {
   interface Window {
@@ -20,12 +23,24 @@ const vscode = window.acquireVsCodeApi();
 function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [schemaFile, setSchemaFile] = useState<SchemaFile | null>(null);
+  const [parsedSchema, setParsedSchema] = useState<PrismaSchema | null>(null);
+  const [selectedModels, setSelectedModels] = useState<string[]>([]);
 
   const handleFileSelect = () => {
     console.log('Sending selectSchemaFile message to VSCode');
     setIsLoading(true);
     vscode.postMessage({
       type: 'selectSchemaFile'
+    });
+  };
+
+  const handleModelSelect = (modelName: string) => {
+    setSelectedModels(prev => {
+      if (prev.includes(modelName)) {
+        return prev.filter(name => name !== modelName);
+      } else {
+        return [...prev, modelName];
+      }
     });
   };
 
@@ -43,6 +58,14 @@ function App() {
             content: message.content,
             path: message.path
           });
+          // スキーマを解析
+          try {
+            const schema = parseSchema(message.content);
+            setParsedSchema(schema);
+          } catch (error) {
+            console.error('Failed to parse schema:', error);
+            // TODO: エラー表示
+          }
           break;
         case 'error':
           console.error('Error from VSCode:', message.message);
@@ -64,12 +87,27 @@ function App() {
       {!schemaFile ? (
         <SchemaFileSelector onFileSelect={handleFileSelect} isLoading={isLoading} />
       ) : (
-        <div className="mt-4">
-          <h2 className="text-xl font-semibold mb-2">選択されたスキーマファイル:</h2>
-          <p className="text-sm text-muted-foreground mb-4">{schemaFile.path}</p>
-          <pre className="p-4 bg-muted rounded-lg overflow-auto max-h-[600px]">
-            <code>{schemaFile.content}</code>
-          </pre>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">スキーマファイル: {schemaFile.path}</h2>
+            <button
+              className="text-sm text-primary hover:underline"
+              onClick={() => {
+                setSchemaFile(null);
+                setParsedSchema(null);
+                setSelectedModels([]);
+              }}
+            >
+              別のファイルを選択
+            </button>
+          </div>
+          {parsedSchema && (
+            <ModelGrid
+              schema={parsedSchema}
+              selectedModels={selectedModels}
+              onModelSelect={handleModelSelect}
+            />
+          )}
         </div>
       )}
     </div>
