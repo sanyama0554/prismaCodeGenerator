@@ -30,4 +30,17 @@ export interface PrismaSchema {
   datasource: {
     provider: string;
   };
+}
+
+export type Operator = 'equals' | 'not' | 'gt' | 'gte' | 'lt' | 'lte' | 'contains' | 'startsWith' | 'endsWith';
+
+export interface Condition {
+  field: string;
+  operator: Operator;
+  value: string;
+}
+
+export interface Conditions {
+  AND?: Condition[];
+  OR?: Condition[];
 } 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { PrismaSchema, PrismaModel } from '../types/schema';
+import { PrismaSchema, PrismaModel, Condition, Operator } from '../types/schema';
+import { WhereCondition } from './WhereCondition';
 
 type OperationType = 'create' | 'read' | 'update' | 'delete';
 
@@ -9,7 +10,10 @@ interface CodeGeneratorPanelProps {
     model: PrismaModel;
     operation: OperationType;
     selectedFields: string[];
-    conditions: any; // TODO: 型を定義
+    conditions: {
+      AND?: Condition[];
+      OR?: Condition[];
+    };
   }) => void;
 }
 
@@ -17,6 +21,31 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
   const [selectedModel, setSelectedModel] = useState<PrismaModel | null>(null);
   const [operation, setOperation] = useState<OperationType>('read');
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
+  const [conditions, setConditions] = useState<Condition[]>([]);
+  const [conditionType, setConditionType] = useState<'AND' | 'OR'>('AND');
+
+  const handleAddCondition = () => {
+    if (selectedModel) {
+      setConditions([
+        ...conditions,
+        {
+          field: selectedModel.fields[0].name,
+          operator: 'equals',
+          value: ''
+        }
+      ]);
+    }
+  };
+
+  const handleConditionChange = (index: number, field: string, operator: Operator, value: string) => {
+    const newConditions = [...conditions];
+    newConditions[index] = { field, operator, value };
+    setConditions(newConditions);
+  };
+
+  const handleConditionDelete = (index: number) => {
+    setConditions(conditions.filter((_, i) => i !== index));
+  };
 
   return (
     <div className="space-y-6 p-6 bg-white rounded-lg shadow-md">
@@ -33,6 +62,7 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
               const model = schema.models.find(m => m.name === e.target.value);
               setSelectedModel(model || null);
               setSelectedFields([]);
+              setConditions([]);
             }}
           >
             <option value="">選択してください</option>
@@ -108,6 +138,49 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
           </div>
         )}
 
+        {/* 検索条件 */}
+        {selectedModel && (operation === 'read' || operation === 'update' || operation === 'delete') && (
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">検索条件</label>
+              <div className="flex items-center gap-2">
+                <select
+                  value={conditionType}
+                  onChange={(e) => setConditionType(e.target.value as 'AND' | 'OR')}
+                  className="text-sm border rounded-md p-1"
+                >
+                  <option value="AND">AND</option>
+                  <option value="OR">OR</option>
+                </select>
+                <button
+                  onClick={handleAddCondition}
+                  className="text-sm bg-secondary hover:bg-secondary/80 rounded-md px-2 py-1"
+                >
+                  条件を追加
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {conditions.map((condition, index) => (
+                <WhereCondition
+                  key={index}
+                  fields={selectedModel.fields}
+                  field={condition.field}
+                  operator={condition.operator}
+                  value={condition.value}
+                  onChange={(field, operator, value) => handleConditionChange(index, field, operator, value)}
+                  onDelete={() => handleConditionDelete(index)}
+                />
+              ))}
+              {conditions.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  条件が設定されていません
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* 生成ボタン */}
         {selectedModel && selectedFields.length > 0 && (
           <button
@@ -116,7 +189,9 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
               model: selectedModel,
               operation,
               selectedFields,
-              conditions: {} // TODO: 条件の実装
+              conditions: conditions.length > 0 ? {
+                [conditionType]: conditions
+              } : {}
             })}
           >
             コードを生成

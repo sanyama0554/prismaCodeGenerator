@@ -1,12 +1,27 @@
 import { PrismaModel } from '../webview/types/schema';
 
 type OperationType = 'create' | 'read' | 'update' | 'delete';
+type Operator = 'equals' | 'not' | 'gt' | 'gte' | 'lt' | 'lte' | 'contains' | 'startsWith' | 'endsWith';
+
+interface Condition {
+  field: string;
+  operator: Operator;
+  value: any;
+}
+
+interface Conditions {
+  AND?: Condition[];
+  OR?: Condition[];
+  field?: string;
+  operator?: Operator;
+  value?: any;
+}
 
 interface GenerateConfig {
   model: PrismaModel;
   operation: OperationType;
   selectedFields: string[];
-  conditions: any;
+  conditions: Conditions;
 }
 
 /**
@@ -35,10 +50,49 @@ const prisma = new PrismaClient();`;
 }
 
 /**
+ * 条件オブジェクトをPrismaのwhere句に変換します
+ */
+function generateWhereClause(conditions: Conditions): string {
+  if (!conditions || Object.keys(conditions).length === 0) {
+    return '// TODO: 検索条件を指定';
+  }
+
+  // AND条件の処理
+  if (conditions.AND) {
+    const andConditions = conditions.AND.map(condition => {
+      if (condition.operator === 'equals') {
+        return `    ${condition.field}: ${JSON.stringify(condition.value)}`;
+      } else {
+        return `    ${condition.field}: {
+      ${condition.operator}: ${JSON.stringify(condition.value)}
+    }`;
+      }
+    }).join(',\n');
+
+    return `AND: [
+${andConditions}
+    ]`;
+  }
+
+  // 単一条件の処理
+  if (conditions.field) {
+    if (conditions.operator === 'equals') {
+      return `    ${conditions.field}: ${JSON.stringify(conditions.value)}`;
+    } else {
+      return `    ${conditions.field}: {
+      ${conditions.operator}: ${JSON.stringify(conditions.value)}
+    }`;
+    }
+  }
+
+  return '// TODO: 検索条件を指定';
+}
+
+/**
  * 選択された設定に基づいて、Prismaクエリを生成します
  */
 export function generatePrismaQuery(config: GenerateConfig): string {
-  const { model, operation, selectedFields } = config;
+  const { model, operation, selectedFields, conditions } = config;
   const lowerModelName = model.name.charAt(0).toLowerCase() + model.name.slice(1);
 
   // 選択されたフィールドを含むselectオブジェクトを生成
@@ -60,7 +114,7 @@ export function generatePrismaQuery(config: GenerateConfig): string {
     case 'read':
       return `const results = await prisma.${lowerModelName}.findMany({
   where: {
-    // TODO: 検索条件を指定
+${generateWhereClause(conditions)}
   },
   select: ${JSON.stringify(selectObject, null, 2)}
 });`;

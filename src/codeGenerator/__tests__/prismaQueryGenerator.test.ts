@@ -164,4 +164,89 @@ describe('generatePrismaQuery', () => {
       expect(result).toMatch(selectPattern);
     });
   });
+
+  describe('条件付きクエリ', () => {
+    it('単一の等価条件でクエリを生成', () => {
+      const result = generatePrismaQuery({
+        model: mockUserModel,
+        operation: 'read',
+        selectedFields: ['id', 'email'],
+        conditions: {
+          field: 'email',
+          operator: 'equals',
+          value: 'test@example.com'
+        }
+      });
+
+      expect(result).toContain('where: {');
+      expect(result).toContain('email: "test@example.com"');
+      expect(result).toContain('prisma.user.findMany');
+    });
+
+    it('数値型の比較条件でクエリを生成', () => {
+      const result = generatePrismaQuery({
+        model: mockUserModel,
+        operation: 'read',
+        selectedFields: ['id', 'email'],
+        conditions: {
+          field: 'id',
+          operator: 'gt',
+          value: 100
+        }
+      });
+
+      expect(result).toContain('where: {');
+      expect(result).toContain('id: {');
+      expect(result).toContain('gt: 100');
+      expect(result).toContain('prisma.user.findMany');
+    });
+
+    it('文字列の部分一致条件でクエリを生成', () => {
+      const result = generatePrismaQuery({
+        model: mockUserModel,
+        operation: 'read',
+        selectedFields: ['id', 'name'],
+        conditions: {
+          field: 'name',
+          operator: 'contains',
+          value: 'John'
+        }
+      });
+
+      expect(result).toContain('where: {');
+      expect(result).toContain('name: {');
+      expect(result).toContain('contains: "John"');
+      expect(result).toContain('prisma.user.findMany');
+    });
+
+    it('複数の条件を組み合わせてクエリを生成', () => {
+      const result = generatePrismaQuery({
+        model: mockUserModel,
+        operation: 'read',
+        selectedFields: ['id', 'email', 'name'],
+        conditions: {
+          AND: [
+            {
+              field: 'email',
+              operator: 'contains',
+              value: '@example.com'
+            },
+            {
+              field: 'id',
+              operator: 'gt',
+              value: 10
+            }
+          ]
+        }
+      });
+
+      expect(result).toContain('where: {');
+      expect(result).toContain('AND: [');
+      expect(result).toContain('email: {');
+      expect(result).toContain('contains: "@example.com"');
+      expect(result).toContain('id: {');
+      expect(result).toContain('gt: 10');
+      expect(result).toContain('prisma.user.findMany');
+    });
+  });
 }); 
