@@ -4,7 +4,8 @@ import { SchemaFileSelector } from './components/SchemaFileSelector';
 import { ModelFlow } from './components/ModelFlow';
 import { ModelGrid } from './components/ModelGrid';
 import { parseSchema } from './utils/schemaParser';
-import { PrismaSchema } from './types/schema';
+import { PrismaSchema, PrismaModel } from './types/schema';
+import { CodeGeneratorPanel } from './components/CodeGeneratorPanel';
 
 declare global {
   interface Window {
@@ -27,6 +28,7 @@ function App() {
   const [parsedSchema, setParsedSchema] = useState<PrismaSchema | null>(null);
   const [selectedModels, setSelectedModels] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'flow'>('flow');
+  const [error, setError] = useState<string | null>(null);
 
   const handleFileSelect = () => {
     console.log('Sending selectSchemaFile message to VSCode');
@@ -46,6 +48,23 @@ function App() {
     });
   };
 
+  const handleGenerateCRUD = (config: {
+    model: PrismaModel;
+    operation: 'create' | 'read' | 'update' | 'delete';
+    selectedFields: string[];
+    conditions: any;
+  }) => {
+    if (schemaFile) {
+      vscode.postMessage({
+        type: 'generateCRUD',
+        schema: schemaFile.content,
+        config
+      });
+    } else {
+      console.warn('スキーマファイルが読み込まれていません。');
+    }
+  };
+
   // メッセージハンドラーを設定
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -56,6 +75,7 @@ function App() {
         case 'schemaFileSelected':
           console.log('Schema file selected:', message.path);
           setIsLoading(false);
+          setError(null);
           setSchemaFile({
             content: message.content,
             path: message.path
@@ -66,13 +86,18 @@ function App() {
             setParsedSchema(schema);
           } catch (error) {
             console.error('Failed to parse schema:', error);
-            // TODO: エラー表示
+            setError('スキーマの解析に失敗しました。');
           }
+          break;
+        case 'generateCRUDSuccess':
+          setError(null);
+          // 成功メッセージを表示
+          setError(message.message);
           break;
         case 'error':
           console.error('Error from VSCode:', message.message);
           setIsLoading(false);
-          // TODO: エラー処理
+          setError(message.message);
           break;
         default:
           console.log('Unknown message type:', message.type);
@@ -86,6 +111,11 @@ function App() {
 
   return (
     <div className="container mx-auto p-4">
+      {error && (
+        <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-md">
+          {error}
+        </div>
+      )}
       {!schemaFile ? (
         <SchemaFileSelector onFileSelect={handleFileSelect} isLoading={isLoading} />
       ) : (
@@ -138,21 +168,33 @@ function App() {
               別のファイルを選択
             </button>
           </div>
-          {parsedSchema && (
-            viewMode === 'flow' ? (
-              <ModelFlow
-                schema={parsedSchema}
-                selectedModels={selectedModels}
-                onModelSelect={handleModelSelect}
-              />
-            ) : (
-              <ModelGrid
-                schema={parsedSchema}
-                selectedModels={selectedModels}
-                onModelSelect={handleModelSelect}
-              />
-            )
-          )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div>
+              {parsedSchema && (
+                viewMode === 'flow' ? (
+                  <ModelFlow
+                    schema={parsedSchema}
+                    selectedModels={selectedModels}
+                    onModelSelect={handleModelSelect}
+                  />
+                ) : (
+                  <ModelGrid
+                    schema={parsedSchema}
+                    selectedModels={selectedModels}
+                    onModelSelect={handleModelSelect}
+                  />
+                )
+              )}
+            </div>
+            <div>
+              {parsedSchema && (
+                <CodeGeneratorPanel
+                  schema={parsedSchema}
+                  onGenerate={handleGenerateCRUD}
+                />
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -3,6 +3,9 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { generatePrismaClientCode } from './codeGenerator/prismaCodeGenerator';
+import { parseSchema } from './webview/utils/schemaParser';
+import { generatePrismaQuery } from './codeGenerator/prismaQueryGenerator';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -134,6 +137,41 @@ export function activate(context: vscode.ExtensionContext) {
 								message: 'Failed to read schema file'
 							});
 						}
+						break;
+					case 'generateCRUD':
+						try {
+							console.log('Executing CRUD code generation...');
+							const { schema, config } = message;
+							
+							// コード生成
+							const generatedCode = generatePrismaQuery(config);
+							
+							// 生成したコードをプレビュー表示
+							const doc = await vscode.workspace.openTextDocument({
+								content: generatedCode,
+								language: 'typescript'
+							});
+							await vscode.window.showTextDocument(doc, { preview: true });
+
+							console.log('CRUD code generation completed.');
+							panel.webview.postMessage({
+								type: 'generateCRUDSuccess',
+								message: 'コードの生成が完了しました。プレビューを確認してください。'
+							});
+						} catch (error) {
+							console.error('Error during CRUD generation:', error);
+							panel.webview.postMessage({
+								type: 'error',
+								message: 'コード生成に失敗しました。'
+							});
+						}
+						break;
+					case 'error':
+						console.error('Error from WebView:', message.message);
+						panel.webview.postMessage({
+							type: 'error',
+							message: message.message
+						});
 						break;
 					default:
 						console.log('Unknown message type:', message.type);
