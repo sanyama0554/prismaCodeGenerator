@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Text, Title, Badge, Group, Stack } from '@mantine/core';
+import { Card, Text, Title, Badge, Group, Stack, useMantineTheme } from '@mantine/core';
 import { PrismaModel, PrismaField } from '../types/schema';
 
 interface ModelCardProps {
@@ -9,10 +9,12 @@ interface ModelCardProps {
 }
 
 function FieldRow({ field }: { field: PrismaField }) {
+  const theme = useMantineTheme();
+  
   return (
     <Group justify="space-between" py="xs" px="sm" style={{ 
-      backgroundColor: 'var(--mantine-color-gray-0)',
-      borderRadius: 'var(--mantine-radius-sm)',
+      backgroundColor: theme.colors.gray[0],
+      borderRadius: theme.radius.sm,
     }}>
       <Group gap="xs">
         <Text fw={500}>{field.name}</Text>
@@ -38,6 +40,8 @@ function FieldRow({ field }: { field: PrismaField }) {
 }
 
 export function ModelCard({ model, isSelected = false, onSelect }: ModelCardProps) {
+  const theme = useMantineTheme();
+
   return (
     <Card
       shadow="sm"
@@ -45,9 +49,10 @@ export function ModelCard({ model, isSelected = false, onSelect }: ModelCardProp
       radius="md"
       withBorder
       style={{
-        borderColor: isSelected ? 'var(--mantine-color-blue-6)' : undefined,
+        borderColor: isSelected ? theme.colors.blue[6] : undefined,
         borderWidth: isSelected ? '2px' : '1px',
         cursor: 'pointer',
+        transition: theme.other.transition.default,
       }}
       onClick={() => onSelect?.(model.name)}
     >

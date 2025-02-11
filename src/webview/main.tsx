@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import { SchemaVisualizerTab } from './components/tabs/SchemaVisualizerTab';
 import { CodeGeneratorTab } from './components/tabs/CodeGeneratorTab';
 import { SettingsTab } from './components/tabs/SettingsTab';
+import { theme } from './theme';
 
 declare global {
   interface Window {
@@ -190,6 +191,8 @@ function App() {
 const root = createRoot(document.getElementById('root')!);
 root.render(
   <React.StrictMode>
-    <App />
+    <MantineProvider theme={theme}>
+      <App />
+    </MantineProvider>
   </React.StrictMode>
 ); 

@@ -1,10 +1,11 @@
 import { Notifications, notifications } from '@mantine/notifications';
-import { MantineProvider } from '@mantine/core';
+import { MantineProvider, useMantineTheme } from '@mantine/core';
 import React from 'react';
 
 export function NotificationsProvider({ children }: { children: React.ReactNode }) {
+  const theme = useMantineTheme();
   return (
-    <MantineProvider>
+    <MantineProvider theme={theme}>
       <Notifications position="top-right" zIndex={1000} />
       {children}
     </MantineProvider>
