@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SchemaFileSelector } from './components/SchemaFileSelector';
-import { ModelFlow } from './components/ModelFlow';
-import { ModelGrid } from './components/ModelGrid';
 import { parseSchema } from './utils/schemaParser';
 import { PrismaSchema, PrismaModel } from './types/schema';
-import { CodeGeneratorPanel } from './components/CodeGeneratorPanel';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
+import { SchemaVisualizerTab } from './components/tabs/SchemaVisualizerTab';
+import { CodeGeneratorTab } from './components/tabs/CodeGeneratorTab';
+import { SettingsTab } from './components/tabs/SettingsTab';
 
 declare global {
   interface Window {
@@ -26,8 +27,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [schemaFile, setSchemaFile] = useState<SchemaFile | null>(null);
   const [parsedSchema, setParsedSchema] = useState<PrismaSchema | null>(null);
-  const [selectedModels, setSelectedModels] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<'grid' | 'flow'>('flow');
   const [error, setError] = useState<string | null>(null);
 
   const handleFileSelect = () => {
@@ -35,16 +34,6 @@ function App() {
     setIsLoading(true);
     vscode.postMessage({
       type: 'selectSchemaFile'
-    });
-  };
-
-  const handleModelSelect = (modelName: string) => {
-    setSelectedModels(prev => {
-      if (prev.includes(modelName)) {
-        return prev.filter(name => name !== modelName);
-      } else {
-        return [...prev, modelName];
-      }
     });
   };
 
@@ -121,80 +110,48 @@ function App() {
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">スキーマファイル: {schemaFile.path}</h2>
-              <div className="flex items-center gap-4 mt-2">
-                <button
-                  className={`text-sm ${viewMode === 'grid' ? 'text-primary font-medium' : 'text-muted-foreground'}`}
-                  onClick={() => setViewMode('grid')}
-                >
-                  グリッド表示
-                </button>
-                <button
-                  className={`text-sm ${viewMode === 'flow' ? 'text-primary font-medium' : 'text-muted-foreground'}`}
-                  onClick={() => setViewMode('flow')}
-                >
-                  フロー表示
-                </button>
-              </div>
-              {viewMode === 'flow' && (
-                <div className="mt-4 bg-white/95 p-4 rounded-lg shadow-md border inline-block">
-                  <div className="text-sm font-medium mb-2">リレーションの種類</div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-0.5" style={{ backgroundColor: '#ff0072' }} />
-                      <span className="text-sm">1:N</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-0.5" style={{ backgroundColor: '#00ff72' }} />
-                      <span className="text-sm">1:1</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-0.5" style={{ backgroundColor: '#0072ff' }} />
-                      <span className="text-sm">N:1</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            <h2 className="text-xl font-semibold">スキーマファイル: {schemaFile.path}</h2>
             <button
               className="text-sm text-primary hover:underline"
               onClick={() => {
                 setSchemaFile(null);
                 setParsedSchema(null);
-                setSelectedModels([]);
               }}
             >
               別のファイルを選択
             </button>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div>
-              {parsedSchema && (
-                viewMode === 'flow' ? (
-                  <ModelFlow
-                    schema={parsedSchema}
-                    selectedModels={selectedModels}
-                    onModelSelect={handleModelSelect}
-                  />
-                ) : (
-                  <ModelGrid
-                    schema={parsedSchema}
-                    selectedModels={selectedModels}
-                    onModelSelect={handleModelSelect}
-                  />
-                )
-              )}
-            </div>
-            <div>
-              {parsedSchema && (
-                <CodeGeneratorPanel
+
+          {parsedSchema && (
+            <Tabs defaultValue="visualizer">
+              <TabsList className="w-full justify-start">
+                <TabsTrigger value="visualizer">
+                  スキーマ可視化
+                </TabsTrigger>
+                <TabsTrigger value="generator">
+                  コード生成
+                </TabsTrigger>
+                <TabsTrigger value="settings">
+                  設定
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="visualizer">
+                <SchemaVisualizerTab schema={parsedSchema} />
+              </TabsContent>
+
+              <TabsContent value="generator">
+                <CodeGeneratorTab
                   schema={parsedSchema}
                   onGenerate={handleGenerateCRUD}
                 />
-              )}
-            </div>
-          </div>
+              </TabsContent>
+
+              <TabsContent value="settings">
+                <SettingsTab />
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
       )}
     </div>
