@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { PrismaSchema, PrismaModel } from '../../types/schema';
 import { CodeGeneratorPanel } from '../CodeGeneratorPanel';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import { Button } from '../ui/button';
-import { useToast } from '../ui/use-toast';
+import { Card, Text, Button, Grid } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-javascript';
@@ -22,7 +21,6 @@ interface CodeGeneratorTabProps {
 export function CodeGeneratorTab({ schema, onGenerate }: CodeGeneratorTabProps) {
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
   const [highlightedCode, setHighlightedCode] = useState<string | null>(null);
-  const { toast } = useToast();
 
   // コード生成イベントのリスナーを設定
   useEffect(() => {
@@ -65,54 +63,55 @@ export function CodeGeneratorTab({ schema, onGenerate }: CodeGeneratorTabProps) 
     if (generatedCode) {
       try {
         await navigator.clipboard.writeText(generatedCode);
-        toast({
+        notifications.show({
           title: "コピー完了",
-          description: "コードをクリップボードにコピーしました",
-          duration: 2000,
+          message: "コードをクリップボードにコピーしました",
+          color: "green",
         });
       } catch (err) {
         console.error('Failed to copy code:', err);
-        toast({
+        notifications.show({
           title: "エラー",
-          description: "コードのコピーに失敗しました",
-          className: "bg-destructive text-destructive-foreground",
-          duration: 2000,
+          message: "コードのコピーに失敗しました",
+          color: "red",
         });
       }
     }
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <div className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>クエリ生成</CardTitle>
-          </CardHeader>
-          <CardContent>
+    <Grid gutter="md">
+      <Grid.Col span={6}>
+        <Card shadow="sm" p="md" radius="md" withBorder>
+          <Card.Section inheritPadding py="xs">
+            <Text size="lg" fw={500}>クエリ生成</Text>
+          </Card.Section>
+          <Card.Section inheritPadding py="md">
             <CodeGeneratorPanel
               schema={schema}
               onGenerate={handleGenerate}
             />
-          </CardContent>
+          </Card.Section>
         </Card>
-      </div>
+      </Grid.Col>
 
-      <div className="space-y-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>生成されたコード</CardTitle>
+      <Grid.Col span={6}>
+        <Card shadow="sm" p="md" radius="md" withBorder>
+          <Card.Section inheritPadding py="xs">
+            <Text size="lg" fw={500}>生成されたコード</Text>
+          </Card.Section>
+          <Card.Section inheritPadding py="md">
             {generatedCode && (
               <Button
-                variant="outline"
+                variant="light"
                 size="sm"
                 onClick={handleCopyCode}
               >
                 コピー
               </Button>
             )}
-          </CardHeader>
-          <CardContent>
+          </Card.Section>
+          <Card.Section inheritPadding py="md">
             {highlightedCode ? (
               <pre className="p-4 bg-muted rounded-lg overflow-x-auto">
                 <code
@@ -121,13 +120,13 @@ export function CodeGeneratorTab({ schema, onGenerate }: CodeGeneratorTabProps) 
                 />
               </pre>
             ) : (
-              <div className="text-center text-muted-foreground p-4">
+              <Text c="dimmed" ta="center" py="xl">
                 クエリを生成するとここにコードが表示されます
-              </div>
+              </Text>
             )}
-          </CardContent>
+          </Card.Section>
         </Card>
-      </div>
-    </div>
+      </Grid.Col>
+    </Grid>
   );
 } 

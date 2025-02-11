@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, Text, Title, Badge, Group, Stack } from '@mantine/core';
 import { PrismaModel, PrismaField } from '../types/schema';
 
 interface ModelCardProps {
@@ -10,55 +10,65 @@ interface ModelCardProps {
 
 function FieldRow({ field }: { field: PrismaField }) {
   return (
-    <div className="flex items-center py-1 hover:bg-accent/50 rounded px-2">
-      <div className="flex-1 flex items-center gap-2">
-        <span className="font-medium">{field.name}</span>
-        <span className="text-sm text-muted-foreground">
+    <Group justify="space-between" py="xs" px="sm" style={{ 
+      backgroundColor: 'var(--mantine-color-gray-0)',
+      borderRadius: 'var(--mantine-radius-sm)',
+    }}>
+      <Group gap="xs">
+        <Text fw={500}>{field.name}</Text>
+        <Text size="sm" c="dimmed">
           {field.type}
           {field.isList ? '[]' : ''}
           {!field.isRequired ? '?' : ''}
-        </span>
-      </div>
-      <div className="flex gap-1">
+        </Text>
+      </Group>
+      <Group gap="xs">
         {field.isId && (
-          <span className="px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded">ID</span>
+          <Badge variant="light" color="blue">ID</Badge>
         )}
         {field.isUnique && (
-          <span className="px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded">Unique</span>
+          <Badge variant="light" color="blue">Unique</Badge>
         )}
         {field.relation && (
-          <span className="px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded">Relation</span>
+          <Badge variant="light" color="blue">Relation</Badge>
         )}
-      </div>
-    </div>
+      </Group>
+    </Group>
   );
 }
 
 export function ModelCard({ model, isSelected = false, onSelect }: ModelCardProps) {
   return (
-    <Card className={`
-      border-2 transition-colors cursor-pointer
-      ${isSelected ? 'border-primary' : 'border-transparent hover:border-primary/50'}
-    `}
-    onClick={() => onSelect?.(model.name)}
+    <Card
+      shadow="sm"
+      padding="md"
+      radius="md"
+      withBorder
+      style={{
+        borderColor: isSelected ? 'var(--mantine-color-blue-6)' : undefined,
+        borderWidth: isSelected ? '2px' : '1px',
+        cursor: 'pointer',
+      }}
+      onClick={() => onSelect?.(model.name)}
     >
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between">
-          <span>{model.name}</span>
+      <Card.Section inheritPadding py="sm">
+        <Group justify="space-between" align="center">
+          <Title order={3}>{model.name}</Title>
           {model.dbName && (
-            <span className="text-sm text-muted-foreground">
+            <Text size="sm" c="dimmed">
               → {model.dbName}
-            </span>
+            </Text>
           )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-1">
+        </Group>
+      </Card.Section>
+
+      <Card.Section inheritPadding pt="xs">
+        <Stack gap="xs">
           {model.fields.map(field => (
             <FieldRow key={field.name} field={field} />
           ))}
-        </div>
-      </CardContent>
+        </Stack>
+      </Card.Section>
     </Card>
   );
 } 

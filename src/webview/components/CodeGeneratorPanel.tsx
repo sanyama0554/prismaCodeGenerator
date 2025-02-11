@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PrismaSchema, PrismaModel, Condition, Operator } from '../types/schema';
 import { WhereCondition } from './WhereCondition';
+import { Card, Title, Select, Button, Stack, Group, Checkbox, ScrollArea, rem } from '@mantine/core';
 
 type OperationType = 'create' | 'read' | 'update' | 'delete';
 
@@ -48,119 +49,119 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
   };
 
   return (
-    <div className="space-y-6 p-6 bg-white rounded-lg shadow-md">
-      <div>
-        <h3 className="text-lg font-medium mb-4">コード生成</h3>
+    <Card shadow="sm" radius="md" p="lg" withBorder>
+      <Stack gap={rem(20)}>
+        <Title order={3}>コード生成</Title>
         
         {/* モデル選択 */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">モデルを選択</label>
-          <select
-            className="w-full border rounded-md p-2"
-            value={selectedModel?.name || ''}
-            onChange={(e) => {
-              const model = schema.models.find(m => m.name === e.target.value);
+        <Stack gap={rem(8)}>
+          <Title order={4} size="sm">モデルを選択</Title>
+          <Select
+            data={schema.models.map(model => ({
+              value: model.name,
+              label: model.name
+            }))}
+            value={selectedModel?.name || null}
+            onChange={(value) => {
+              const model = schema.models.find(m => m.name === value);
               setSelectedModel(model || null);
               setSelectedFields([]);
               setConditions([]);
             }}
-          >
-            <option value="">選択してください</option>
-            {schema.models.map(model => (
-              <option key={model.name} value={model.name}>
-                {model.name}
-              </option>
-            ))}
-          </select>
-        </div>
+            placeholder="選択してください"
+          />
+        </Stack>
 
         {/* 操作タイプの選択 */}
         {selectedModel && (
-          <div className="mt-4 space-y-2">
-            <label className="text-sm font-medium">操作タイプ</label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                className={`p-2 rounded-md ${operation === 'create' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}
+          <Stack gap={rem(8)}>
+            <Title order={4} size="sm">操作タイプ</Title>
+            <Group grow>
+              <Button
+                variant={operation === 'create' ? 'filled' : 'light'}
                 onClick={() => setOperation('create')}
               >
                 作成
-              </button>
-              <button
-                className={`p-2 rounded-md ${operation === 'read' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}
+              </Button>
+              <Button
+                variant={operation === 'read' ? 'filled' : 'light'}
                 onClick={() => setOperation('read')}
               >
                 取得
-              </button>
-              <button
-                className={`p-2 rounded-md ${operation === 'update' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}
+              </Button>
+              <Button
+                variant={operation === 'update' ? 'filled' : 'light'}
                 onClick={() => setOperation('update')}
               >
                 更新
-              </button>
-              <button
-                className={`p-2 rounded-md ${operation === 'delete' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}`}
+              </Button>
+              <Button
+                variant={operation === 'delete' ? 'filled' : 'light'}
                 onClick={() => setOperation('delete')}
               >
                 削除
-              </button>
-            </div>
-          </div>
+              </Button>
+            </Group>
+          </Stack>
         )}
 
         {/* フィールド選択 */}
         {selectedModel && (
-          <div className="mt-4 space-y-2">
-            <label className="text-sm font-medium">使用するフィールド</label>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {selectedModel.fields.map(field => (
-                <label key={field.name} className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
+          <Stack gap={rem(8)}>
+            <Title order={4} size="sm">使用するフィールド</Title>
+            <ScrollArea.Autosize mah={300}>
+              <Stack gap={rem(8)}>
+                {selectedModel.fields.map(field => (
+                  <Checkbox
+                    key={field.name}
+                    label={
+                      <Group gap="xs">
+                        <span>{field.name}</span>
+                        <span style={{ color: 'var(--mantine-color-dimmed)' }}>
+                          ({field.type}{field.isList ? '[]' : ''}{field.isRequired ? '' : '?'})
+                        </span>
+                      </Group>
+                    }
                     checked={selectedFields.includes(field.name)}
                     onChange={(e) => {
-                      if (e.target.checked) {
+                      if (e.currentTarget.checked) {
                         setSelectedFields([...selectedFields, field.name]);
                       } else {
                         setSelectedFields(selectedFields.filter(f => f !== field.name));
                       }
                     }}
-                    className="rounded border-gray-300"
                   />
-                  <span className="text-sm">
-                    {field.name}
-                    <span className="text-muted-foreground ml-1">
-                      ({field.type}{field.isList ? '[]' : ''}{field.isRequired ? '' : '?'})
-                    </span>
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
+                ))}
+              </Stack>
+            </ScrollArea.Autosize>
+          </Stack>
         )}
 
         {/* 検索条件 */}
         {selectedModel && (operation === 'read' || operation === 'update' || operation === 'delete') && (
-          <div className="mt-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium">検索条件</label>
-              <div className="flex items-center gap-2">
-                <select
+          <Stack gap={rem(8)}>
+            <Group justify="space-between" align="center">
+              <Title order={4} size="sm">検索条件</Title>
+              <Group>
+                <Select
                   value={conditionType}
-                  onChange={(e) => setConditionType(e.target.value as 'AND' | 'OR')}
-                  className="text-sm border rounded-md p-1"
-                >
-                  <option value="AND">AND</option>
-                  <option value="OR">OR</option>
-                </select>
-                <button
+                  onChange={(value) => value && setConditionType(value as 'AND' | 'OR')}
+                  data={[
+                    { value: 'AND', label: 'AND' },
+                    { value: 'OR', label: 'OR' }
+                  ]}
+                  size="xs"
+                />
+                <Button
+                  variant="light"
+                  size="xs"
                   onClick={handleAddCondition}
-                  className="text-sm bg-secondary hover:bg-secondary/80 rounded-md px-2 py-1"
                 >
                   条件を追加
-                </button>
-              </div>
-            </div>
-            <div className="space-y-2">
+                </Button>
+              </Group>
+            </Group>
+            <Stack gap={rem(8)}>
               {conditions.map((condition, index) => (
                 <WhereCondition
                   key={index}
@@ -173,18 +174,19 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
                 />
               ))}
               {conditions.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  条件が設定されていません
-                </p>
+                <Card withBorder p="sm">
+                  <Card.Section inheritPadding py="xs">
+                    条件が設定されていません
+                  </Card.Section>
+                </Card>
               )}
-            </div>
-          </div>
+            </Stack>
+          </Stack>
         )}
 
         {/* 生成ボタン */}
         {selectedModel && selectedFields.length > 0 && (
-          <button
-            className="mt-6 w-full bg-primary text-primary-foreground rounded-md p-2"
+          <Button
             onClick={() => onGenerate({
               model: selectedModel,
               operation,
@@ -193,11 +195,13 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
                 [conditionType]: conditions
               } : {}
             })}
+            fullWidth
+            size="lg"
           >
             コードを生成
-          </button>
+          </Button>
         )}
-      </div>
-    </div>
+      </Stack>
+    </Card>
   );
 } 

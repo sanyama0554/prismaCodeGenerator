@@ -1,4 +1,5 @@
 import React from 'react';
+import { SimpleGrid } from '@mantine/core';
 import { PrismaSchema } from '../types/schema';
 import { ModelCard } from './ModelCard';
 
@@ -10,7 +11,11 @@ interface ModelGridProps {
 
 export function ModelGrid({ schema, selectedModels = [], onModelSelect }: ModelGridProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+    <SimpleGrid
+      cols={{ base: 1, md: 2, lg: 3 }}
+      spacing="md"
+      p="md"
+    >
       {schema.models.map(model => (
         <ModelCard
           key={model.name}
@@ -19,6 +24,6 @@ export function ModelGrid({ schema, selectedModels = [], onModelSelect }: ModelG
           onSelect={onModelSelect}
         />
       ))}
-    </div>
-  )
+    </SimpleGrid>
+  );
 } 

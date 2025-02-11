@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
+import { MantineProvider } from '@mantine/core';
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
+import { NotificationsProvider, showNotification } from './components/ui/notifications';
 import { SchemaFileSelector } from './components/SchemaFileSelector';
 import { parseSchema } from './utils/schemaParser';
 import { PrismaSchema, PrismaModel } from './types/schema';
@@ -7,7 +11,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import { SchemaVisualizerTab } from './components/tabs/SchemaVisualizerTab';
 import { CodeGeneratorTab } from './components/tabs/CodeGeneratorTab';
 import { SettingsTab } from './components/tabs/SettingsTab';
-import { Toaster } from './components/ui/toaster';
 
 declare global {
   interface Window {
@@ -98,13 +101,11 @@ function App() {
             setParsedSchema(schema);
           } catch (error) {
             console.error('Failed to parse schema:', error);
-            setError('スキーマの解析に失敗しました。');
+            showNotification.error('スキーマの解析に失敗しました。');
           }
           break;
         case 'generateCRUDSuccess':
-          setError(null);
-          // 成功メッセージを表示
-          setError(message.message);
+          showNotification.success('コードの生成が完了しました。');
           // 生成されたコードをCodeGeneratorTabに渡す
           if (message.code) {
             // イベントを発行してCodeGeneratorTabに通知
@@ -117,7 +118,7 @@ function App() {
         case 'error':
           console.error('Error from VSCode:', message.message);
           setIsLoading(false);
-          setError(message.message);
+          showNotification.error(message.message);
           break;
         default:
           console.log('Unknown message type:', message.type);
@@ -130,63 +131,59 @@ function App() {
   }, []);
 
   return (
-    <div className="container mx-auto p-4">
-      {error && (
-        <div className="mb-4 p-4 bg-destructive/10 text-destructive rounded-md">
-          {error}
-        </div>
-      )}
-      {!schemaFile ? (
-        <SchemaFileSelector onFileSelect={handleFileSelect} isLoading={isLoading} />
-      ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">スキーマファイル: {schemaFile.path}</h2>
-            <button
-              className="text-sm text-primary hover:underline"
-              onClick={() => {
-                setSchemaFile(null);
-                setParsedSchema(null);
-              }}
-            >
-              別のファイルを選択
-            </button>
+    <NotificationsProvider>
+      <div className="container mx-auto p-4">
+        {!schemaFile ? (
+          <SchemaFileSelector onFileSelect={handleFileSelect} isLoading={isLoading} />
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">スキーマファイル: {schemaFile.path}</h2>
+              <button
+                className="text-sm text-primary hover:underline"
+                onClick={() => {
+                  setSchemaFile(null);
+                  setParsedSchema(null);
+                }}
+              >
+                別のファイルを選択
+              </button>
+            </div>
+
+            {parsedSchema && (
+              <Tabs defaultValue="visualizer">
+                <TabsList className="w-full justify-start">
+                  <TabsTrigger value="visualizer">
+                    スキーマ可視化
+                  </TabsTrigger>
+                  <TabsTrigger value="generator">
+                    コード生成
+                  </TabsTrigger>
+                  <TabsTrigger value="settings">
+                    設定
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="visualizer">
+                  <SchemaVisualizerTab schema={parsedSchema} />
+                </TabsContent>
+
+                <TabsContent value="generator">
+                  <CodeGeneratorTab
+                    schema={parsedSchema}
+                    onGenerate={handleGenerateCRUD}
+                  />
+                </TabsContent>
+
+                <TabsContent value="settings">
+                  <SettingsTab />
+                </TabsContent>
+              </Tabs>
+            )}
           </div>
-
-          {parsedSchema && (
-            <Tabs defaultValue="visualizer">
-              <TabsList className="w-full justify-start">
-                <TabsTrigger value="visualizer">
-                  スキーマ可視化
-                </TabsTrigger>
-                <TabsTrigger value="generator">
-                  コード生成
-                </TabsTrigger>
-                <TabsTrigger value="settings">
-                  設定
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="visualizer">
-                <SchemaVisualizerTab schema={parsedSchema} />
-              </TabsContent>
-
-              <TabsContent value="generator">
-                <CodeGeneratorTab
-                  schema={parsedSchema}
-                  onGenerate={handleGenerateCRUD}
-                />
-              </TabsContent>
-
-              <TabsContent value="settings">
-                <SettingsTab />
-              </TabsContent>
-            </Tabs>
-          )}
-        </div>
-      )}
-      <Toaster />
-    </div>
+        )}
+      </div>
+    </NotificationsProvider>
   );
 }
 

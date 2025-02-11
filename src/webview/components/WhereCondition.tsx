@@ -1,5 +1,7 @@
 import React from 'react';
 import { PrismaField } from '../types/schema';
+import { Group, Select, TextInput, NumberInput, ActionIcon, Paper } from '@mantine/core';
+import { IconTrash } from '@tabler/icons-react';
 
 type Operator = 'equals' | 'not' | 'gt' | 'gte' | 'lt' | 'lte' | 'contains' | 'startsWith' | 'endsWith';
 
@@ -33,48 +35,59 @@ export function WhereCondition({ fields, field, operator, value, onDelete, onCha
   const availableOperators = isNumericField ? NUMBER_OPERATORS : STRING_OPERATORS;
 
   return (
-    <div className="flex items-center gap-2 p-2">
-      {/* フィールド選択 */}
-      <select
-        aria-label="フィールド"
-        value={field}
-        onChange={(e) => onChange(e.target.value, operator, value)}
-        className="min-w-[120px]"
-      >
-        {fields.map(f => (
-          <option key={f.name} value={f.name}>{f.name}</option>
-        ))}
-      </select>
+    <Paper shadow="xs" p="md" withBorder>
+      <Group grow align="center">
+        {/* フィールド選択 */}
+        <Select
+          label="フィールド"
+          data={fields.map(f => ({
+            value: f.name,
+            label: f.name
+          }))}
+          value={field}
+          onChange={(newField) => newField && onChange(newField, operator, value)}
+        />
 
-      {/* 演算子選択 */}
-      <select
-        aria-label="演算子"
-        value={operator}
-        onChange={(e) => onChange(field, e.target.value as Operator, value)}
-        className="min-w-[120px]"
-      >
-        {availableOperators.map(op => (
-          <option key={op} value={op}>{OPERATOR_LABELS[op]}</option>
-        ))}
-      </select>
+        {/* 演算子選択 */}
+        <Select
+          label="演算子"
+          data={availableOperators.map(op => ({
+            value: op,
+            label: OPERATOR_LABELS[op]
+          }))}
+          value={operator}
+          onChange={(newOperator) => newOperator && onChange(field, newOperator as Operator, value)}
+        />
 
-      {/* 値の入力 */}
-      <input
-        aria-label="値"
-        type={isNumericField ? 'number' : 'text'}
-        value={value}
-        onChange={(e) => onChange(field, operator, e.target.value)}
-        className="flex-1 min-w-[200px]"
-        placeholder={`${field}の値を入力`}
-      />
+        {/* 値の入力 */}
+        {isNumericField ? (
+          <NumberInput
+            label="値"
+            value={value === '' ? '' : Number(value)}
+            onChange={(val) => onChange(field, operator, val.toString())}
+            placeholder={`${field}の値を入力`}
+          />
+        ) : (
+          <TextInput
+            label="値"
+            value={value}
+            onChange={(e) => onChange(field, operator, e.currentTarget.value)}
+            placeholder={`${field}の値を入力`}
+          />
+        )}
 
-      {/* 削除ボタン */}
-      <button
-        onClick={onDelete}
-        className="text-destructive hover:text-destructive/80"
-      >
-        削除
-      </button>
-    </div>
+        {/* 削除ボタン */}
+        <ActionIcon
+          variant="light"
+          color="red"
+          onClick={onDelete}
+          size="lg"
+          style={{ marginTop: 'auto' }}
+          aria-label="条件を削除"
+        >
+          <IconTrash size={16} />
+        </ActionIcon>
+      </Group>
+    </Paper>
   );
 } 
