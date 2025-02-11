@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { SchemaFileSelector } from './components/SchemaFileSelector';
 import { parseSchema } from './utils/schemaParser';
@@ -12,6 +12,8 @@ declare global {
   interface Window {
     acquireVsCodeApi: () => {
       postMessage: (message: any) => void;
+      getState: () => any;
+      setState: (state: any) => void;
     };
   }
 }
@@ -23,11 +25,31 @@ interface SchemaFile {
 
 const vscode = window.acquireVsCodeApi();
 
+// 状態の永続化のための型定義
+interface State {
+  schemaFile: SchemaFile | null;
+  parsedSchema: PrismaSchema | null;
+}
+
 function App() {
+  // 初期状態の取得
+  const initialState = (() => {
+    try {
+      return vscode.getState() as State;
+    } catch (e) {
+      return { schemaFile: null, parsedSchema: null };
+    }
+  })();
+
   const [isLoading, setIsLoading] = useState(false);
-  const [schemaFile, setSchemaFile] = useState<SchemaFile | null>(null);
-  const [parsedSchema, setParsedSchema] = useState<PrismaSchema | null>(null);
+  const [schemaFile, setSchemaFile] = useState<SchemaFile | null>(initialState?.schemaFile || null);
+  const [parsedSchema, setParsedSchema] = useState<PrismaSchema | null>(initialState?.parsedSchema || null);
   const [error, setError] = useState<string | null>(null);
+
+  // 状態が変更されたときに保存
+  useEffect(() => {
+    vscode.setState({ schemaFile, parsedSchema });
+  }, [schemaFile, parsedSchema]);
 
   const handleFileSelect = () => {
     console.log('Sending selectSchemaFile message to VSCode');
@@ -55,7 +77,7 @@ function App() {
   };
 
   // メッセージハンドラーを設定
-  React.useEffect(() => {
+  useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       const message = event.data;
       console.log('Received message from VSCode:', message);
@@ -82,6 +104,14 @@ function App() {
           setError(null);
           // 成功メッセージを表示
           setError(message.message);
+          // 生成されたコードをCodeGeneratorTabに渡す
+          if (message.code) {
+            // イベントを発行してCodeGeneratorTabに通知
+            const event = new CustomEvent('codeGenerated', {
+              detail: { code: message.code }
+            });
+            window.dispatchEvent(event);
+          }
           break;
         case 'error':
           console.error('Error from VSCode:', message.message);

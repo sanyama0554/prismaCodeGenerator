@@ -146,18 +146,14 @@ export function activate(context: vscode.ExtensionContext) {
 							// コード生成
 							const generatedCode = generatePrismaQuery(config);
 							
-							// 生成したコードをプレビュー表示
-							const doc = await vscode.workspace.openTextDocument({
-								content: generatedCode,
-								language: 'typescript'
-							});
-							await vscode.window.showTextDocument(doc, { preview: true });
-
-							console.log('CRUD code generation completed.');
+							// 生成したコードをWebViewに返すのみ
 							panel.webview.postMessage({
 								type: 'generateCRUDSuccess',
-								message: 'コードの生成が完了しました。プレビューを確認してください。'
+								message: '生成が完了しました',
+								code: generatedCode
 							});
+
+							console.log('CRUD code generation completed.');
 						} catch (error) {
 							console.error('Error during CRUD generation:', error);
 							panel.webview.postMessage({
