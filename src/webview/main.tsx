@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from './components/ui/tabs';
 import { SchemaVisualizerTab } from './components/tabs/SchemaVisualizerTab';
 import { CodeGeneratorTab } from './components/tabs/CodeGeneratorTab';
 import { SettingsTab } from './components/tabs/SettingsTab';
+import { Toaster } from './components/ui/toaster';
 
 declare global {
   interface Window {
@@ -184,6 +185,7 @@ function App() {
           )}
         </div>
       )}
+      <Toaster />
     </div>
   );
 }

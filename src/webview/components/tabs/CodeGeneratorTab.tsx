@@ -3,6 +3,7 @@ import { PrismaSchema, PrismaModel } from '../../types/schema';
 import { CodeGeneratorPanel } from '../CodeGeneratorPanel';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
+import { useToast } from '../ui/use-toast';
 import Prism from 'prismjs';
 import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-javascript';
@@ -21,6 +22,7 @@ interface CodeGeneratorTabProps {
 export function CodeGeneratorTab({ schema, onGenerate }: CodeGeneratorTabProps) {
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
   const [highlightedCode, setHighlightedCode] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // コード生成イベントのリスナーを設定
   useEffect(() => {
@@ -63,10 +65,19 @@ export function CodeGeneratorTab({ schema, onGenerate }: CodeGeneratorTabProps) 
     if (generatedCode) {
       try {
         await navigator.clipboard.writeText(generatedCode);
-        // TODO: コピー成功通知の表示
+        toast({
+          title: "コピー完了",
+          description: "コードをクリップボードにコピーしました",
+          duration: 2000,
+        });
       } catch (err) {
         console.error('Failed to copy code:', err);
-        // TODO: エラー通知の表示
+        toast({
+          title: "エラー",
+          description: "コードのコピーに失敗しました",
+          className: "bg-destructive text-destructive-foreground",
+          duration: 2000,
+        });
       }
     }
   };
