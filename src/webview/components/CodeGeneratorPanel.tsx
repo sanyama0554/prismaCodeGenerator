@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PrismaSchema, PrismaModel, Condition, Operator } from '../types/schema';
 import { WhereCondition } from './WhereCondition';
-import { Card, Title, Select, Button, Stack, Group, Checkbox, ScrollArea, rem } from '@mantine/core';
+import { Card, Title, Select, Button, Stack, Group, Checkbox, ScrollArea, rem, useMantineTheme } from '@mantine/core';
 
 type OperationType = 'create' | 'read' | 'update' | 'delete';
 
@@ -19,6 +19,7 @@ interface CodeGeneratorPanelProps {
 }
 
 export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelProps) {
+  const theme = useMantineTheme();
   const [selectedModel, setSelectedModel] = useState<PrismaModel | null>(null);
   const [operation, setOperation] = useState<OperationType>('read');
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
@@ -49,7 +50,16 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
   };
 
   return (
-    <Card shadow="sm" radius="md" p="lg" withBorder>
+    <Card 
+      shadow="sm" 
+      radius="md" 
+      p="lg" 
+      withBorder
+      style={{
+        transition: theme.other.transition.default,
+        borderColor: theme.colors.gray[3],
+      }}
+    >
       <Stack gap={rem(20)}>
         <Title order={3}>コード生成</Title>
         
@@ -69,6 +79,14 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
               setConditions([]);
             }}
             placeholder="選択してください"
+            styles={{
+              input: {
+                transition: theme.other.transition.default,
+                '&:focus': {
+                  borderColor: theme.colors.blue[6],
+                }
+              }
+            }}
           />
         </Stack>
 
@@ -80,24 +98,44 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
               <Button
                 variant={operation === 'create' ? 'filled' : 'light'}
                 onClick={() => setOperation('create')}
+                styles={{
+                  root: {
+                    transition: theme.other.transition.default,
+                  }
+                }}
               >
                 作成
               </Button>
               <Button
                 variant={operation === 'read' ? 'filled' : 'light'}
                 onClick={() => setOperation('read')}
+                styles={{
+                  root: {
+                    transition: theme.other.transition.default,
+                  }
+                }}
               >
                 取得
               </Button>
               <Button
                 variant={operation === 'update' ? 'filled' : 'light'}
                 onClick={() => setOperation('update')}
+                styles={{
+                  root: {
+                    transition: theme.other.transition.default,
+                  }
+                }}
               >
                 更新
               </Button>
               <Button
                 variant={operation === 'delete' ? 'filled' : 'light'}
                 onClick={() => setOperation('delete')}
+                styles={{
+                  root: {
+                    transition: theme.other.transition.default,
+                  }
+                }}
               >
                 削除
               </Button>
@@ -117,7 +155,7 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
                     label={
                       <Group gap="xs">
                         <span>{field.name}</span>
-                        <span style={{ color: 'var(--mantine-color-dimmed)' }}>
+                        <span style={{ color: theme.colors.gray[6] }}>
                           ({field.type}{field.isList ? '[]' : ''}{field.isRequired ? '' : '?'})
                         </span>
                       </Group>
@@ -128,6 +166,15 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
                         setSelectedFields([...selectedFields, field.name]);
                       } else {
                         setSelectedFields(selectedFields.filter(f => f !== field.name));
+                      }
+                    }}
+                    styles={{
+                      input: {
+                        transition: theme.other.transition.default,
+                        '&:checked': {
+                          backgroundColor: theme.colors.blue[6],
+                          borderColor: theme.colors.blue[6],
+                        }
                       }
                     }}
                   />
@@ -151,11 +198,24 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
                     { value: 'OR', label: 'OR' }
                   ]}
                   size="xs"
+                  styles={{
+                    input: {
+                      transition: theme.other.transition.default,
+                      '&:focus': {
+                        borderColor: theme.colors.blue[6],
+                      }
+                    }
+                  }}
                 />
                 <Button
                   variant="light"
                   size="xs"
                   onClick={handleAddCondition}
+                  styles={{
+                    root: {
+                      transition: theme.other.transition.default,
+                    }
+                  }}
                 >
                   条件を追加
                 </Button>
@@ -165,6 +225,7 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
               {conditions.map((condition, index) => (
                 <WhereCondition
                   key={index}
+                  id={`condition-${index}`}
                   fields={selectedModel.fields}
                   field={condition.field}
                   operator={condition.operator}
@@ -174,7 +235,14 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
                 />
               ))}
               {conditions.length === 0 && (
-                <Card withBorder p="sm">
+                <Card 
+                  withBorder 
+                  p="sm"
+                  style={{
+                    borderColor: theme.colors.gray[3],
+                    transition: theme.other.transition.default,
+                  }}
+                >
                   <Card.Section inheritPadding py="xs">
                     条件が設定されていません
                   </Card.Section>
@@ -197,6 +265,11 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
             })}
             fullWidth
             size="lg"
+            styles={{
+              root: {
+                transition: theme.other.transition.default,
+              }
+            }}
           >
             コードを生成
           </Button>

@@ -31,6 +31,7 @@ describe('WhereCondition', () => {
         value=""
         onDelete={() => {}}
         onChange={() => {}}
+        id="test-condition"
       />
     );
 
@@ -50,6 +51,7 @@ describe('WhereCondition', () => {
         value=""
         onDelete={() => {}}
         onChange={() => {}}
+        id="test-condition"
       />
     );
 
@@ -70,6 +72,7 @@ describe('WhereCondition', () => {
         value=""
         onDelete={() => {}}
         onChange={() => {}}
+        id="test-condition"
       />
     );
 
@@ -94,6 +97,7 @@ describe('WhereCondition', () => {
         value="test"
         onDelete={() => {}}
         onChange={onChange}
+        id="test-condition"
       />
     );
 
@@ -116,6 +120,7 @@ describe('WhereCondition', () => {
         value="test"
         onDelete={() => {}}
         onChange={onChange}
+        id="test-condition"
       />
     );
 
@@ -138,6 +143,7 @@ describe('WhereCondition', () => {
         value="test"
         onDelete={() => {}}
         onChange={onChange}
+        id="test-condition"
       />
     );
 
@@ -164,6 +170,7 @@ describe('WhereCondition', () => {
         value="test"
         onDelete={onDelete}
         onChange={() => {}}
+        id="test-condition"
       />
     );
 

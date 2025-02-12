@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button } from '@mantine/core';
-import { Card, Text, Title } from '@mantine/core';
+import { Button, Card, Text, Title, Stack, Group, useMantineTheme } from '@mantine/core';
+import { IconFileCode, IconUpload } from '@tabler/icons-react';
 
 interface SchemaFileSelectorProps {
   onFileSelect: () => void;
@@ -8,25 +8,56 @@ interface SchemaFileSelectorProps {
 }
 
 export function SchemaFileSelector({ onFileSelect, isLoading = false }: SchemaFileSelectorProps) {
+  const theme = useMantineTheme();
+
   return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder style={{ maxWidth: '400px', margin: '2rem auto' }}>
-      <Card.Section inheritPadding py="md">
-        <Title order={2}>Prismaスキーマファイルを選択</Title>
-        <Text size="sm" c="dimmed" mt="xs">
-          schema.prismaファイルを選択してください。
-          自動的に検出できない場合は、手動で選択することができます。
-        </Text>
-      </Card.Section>
-      <Card.Section inheritPadding pb="md">
-        <Button
-          onClick={onFileSelect}
-          disabled={isLoading}
-          fullWidth
-          loading={isLoading}
-        >
-          {isLoading ? 'ファイルを検索中...' : 'スキーマファイルを選択'}
-        </Button>
-      </Card.Section>
+    <Card 
+      shadow="sm" 
+      padding="xl" 
+      radius="md" 
+      withBorder 
+      style={{ 
+        maxWidth: '500px', 
+        margin: '4rem auto',
+        transition: theme.other.transition.default,
+        borderColor: theme.colors.gray[3],
+      }}
+    >
+      <Stack gap="xl" align="center">
+        <IconFileCode 
+          size={48} 
+          color={theme.colors.blue[6]}
+          style={{ 
+            transition: theme.other.transition.default,
+            opacity: isLoading ? 0.5 : 1 
+          }}
+        />
+        
+        <Stack gap="xs" align="center">
+          <Title order={2} ta="center">Prismaスキーマファイルを選択</Title>
+          <Text size="sm" c="dimmed" ta="center" maw={400}>
+            schema.prismaファイルを選択してください。
+            自動的に検出できない場合は、手動で選択することができます。
+          </Text>
+        </Stack>
+
+        <Group>
+          <Button
+            onClick={onFileSelect}
+            disabled={isLoading}
+            loading={isLoading}
+            size="lg"
+            leftSection={<IconUpload size={20} />}
+            styles={{
+              root: {
+                transition: theme.other.transition.default,
+              }
+            }}
+          >
+            {isLoading ? 'ファイルを検索中...' : 'スキーマファイルを選択'}
+          </Button>
+        </Group>
+      </Stack>
     </Card>
   );
 } 
