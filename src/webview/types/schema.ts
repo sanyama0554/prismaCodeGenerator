@@ -43,4 +43,40 @@ export interface Condition {
 export interface Conditions {
   AND?: Condition[];
   OR?: Condition[];
+}
+
+// 新しい型定義
+export type SortOrder = 'asc' | 'desc';
+
+export interface SortOption {
+  field: string;
+  order: SortOrder;
+}
+
+export interface PaginationOption {
+  skip?: number;
+  take?: number;
+  cursor?: {
+    field: string;
+    value: any;
+  };
+}
+
+export interface RelationOption {
+  maxDepth?: number;
+  include?: {
+    [key: string]: {
+      select?: string[];
+      sort?: SortOption[];
+      pagination?: PaginationOption;
+    };
+  };
+}
+
+export interface AggregateOption {
+  _count?: boolean | { select: string[] };
+  _sum?: { select: string[] };
+  _avg?: { select: string[] };
+  _min?: { select: string[] };
+  _max?: { select: string[] };
 } 
