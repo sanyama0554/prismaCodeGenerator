@@ -27,16 +27,20 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
   const [conditionType, setConditionType] = useState<'AND' | 'OR'>('AND');
 
   const handleAddCondition = () => {
-    if (selectedModel) {
-      setConditions([
-        ...conditions,
-        {
-          field: selectedModel.fields[0].name,
-          operator: 'equals',
-          value: ''
-        }
-      ]);
-    }
+    if (!selectedModel?.fields?.length) return;
+    
+    const initialField = selectedModel.fields[0];
+    if (!initialField?.name || !initialField?.type) return;
+    
+    const isNumericField = initialField.type === 'Int' || initialField.type === 'Float';
+    setConditions([
+      ...conditions,
+      {
+        field: initialField.name,
+        operator: isNumericField ? 'equals' : 'contains',
+        value: ''
+      }
+    ]);
   };
 
   const handleConditionChange = (index: number, field: string, operator: Operator, value: string) => {
@@ -222,11 +226,11 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
               </Group>
             </Group>
             <Stack gap={rem(8)}>
-              {conditions.map((condition, index) => (
+              {Array.isArray(conditions) && conditions.map((condition, index) => (
                 <WhereCondition
-                  key={index}
+                  key={`condition-${index}`}
                   id={`condition-${index}`}
-                  fields={selectedModel.fields}
+                  fields={selectedModel?.fields ?? []}
                   field={condition.field}
                   operator={condition.operator}
                   value={condition.value}
@@ -234,7 +238,7 @@ export function CodeGeneratorPanel({ schema, onGenerate }: CodeGeneratorPanelPro
                   onDelete={() => handleConditionDelete(index)}
                 />
               ))}
-              {conditions.length === 0 && (
+              {(!Array.isArray(conditions) || conditions.length === 0) && (
                 <Card 
                   withBorder 
                   p="sm"
